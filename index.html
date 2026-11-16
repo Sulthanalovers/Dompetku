@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#F5F4F0" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <title>DompetKu — Buku Kas & Keuangan Pribadi</title>
+
+  <link rel="manifest" href="./manifest.json" />
+  <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png" />
+  <link rel="apple-touch-icon" href="./icon-192.png" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body class="bg-[#F5F4F0] text-[#181816] antialiased selection:bg-[#E6F2ED] selection:text-[#0D6E4E]">
+  <div class="mx-auto flex min-h-screen max-w-2xl flex-col pb-24">
+
+    <!-- Minimal Top Utility Bar -->
+    <header class="sticky top-0 z-30 border-b border-[#E5E3DC] bg-[#F5F4F0]/95 px-4 py-2.5 backdrop-blur-md">
+      <div class="flex items-center justify-between gap-2">
+        <div class="flex items-center gap-2 min-w-0">
+          <span class="h-2 w-2 shrink-0 rounded-full bg-[#0D6E4E]"></span>
+          <span id="connectionBadge" class="text-[11px] font-medium text-[#6B6B64] truncate">Mode Lokal • Siap Hubung Sheets</span>
+          <span id="spaceBadge" class="rounded-md bg-[#E6F2ED] px-1.5 py-0.5 text-[10px] font-semibold text-[#0D6E4E]">Pribadi</span>
+        </div>
+        <div class="flex items-center gap-1.5 shrink-0">
+          <button id="btnHeaderAdd" type="button" class="inline-flex items-center gap-1 rounded-lg bg-[#0D6E4E] px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-[#0A593E] active:scale-95">
+            <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.4"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+            <span>Catat</span>
+          </button>
+          <button id="btnThemeToggle" type="button" title="Mode Gelap/Terang" class="flex h-8 w-8 items-center justify-center rounded-lg border border-[#E5E3DC] bg-white text-[#57564F] hover:bg-[#F9F9F7]">
+            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z" /></svg>
+          </button>
+          <button id="btnSync" type="button" title="Sinkronkan Google Sheets" class="flex h-8 w-8 items-center justify-center rounded-lg border border-[#E5E3DC] bg-white text-[#57564F] hover:bg-[#F9F9F7]">
+            <svg id="syncIcon" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" /></svg>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- ==================== VIEW 1: BERANDA ==================== -->
+    <section id="view-dashboard" class="view-panel px-4 pt-5 space-y-4">
+      <div class="space-y-1">
+        <p class="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#6B6B64]">RINGKASAN KEUANGAN</p>
+        <div class="flex items-center justify-between">
+          <h1 class="font-display text-2xl sm:text-3xl font-bold tracking-tight text-[#181816]">Dompet & Arus Kas</h1>
+          <button id="btnTogglePrivacy" type="button" title="Sembunyikan Saldo" class="rounded-lg border border-[#E5E3DC] bg-white p-1.5 text-[#57564F] hover:bg-[#F9F9F7]">
+            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Month Navigator + 12-Month Grid -->
+      <div class="flex flex-wrap items-center gap-2">
+        <button id="btnPrevMonth" type="button" class="rounded-lg bg-[#0D6E4E] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#0A593E]">&lsaquo; <span id="prevMonthText">Okt</span></button>
+        <span id="activeMonthBadge" class="rounded-lg border border-[#E5E3DC] bg-white px-3 py-1.5 text-xs font-bold text-[#181816]">November 2026</span>
+        <button id="btnNextMonth" type="button" class="rounded-lg bg-[#0D6E4E] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#0A593E]"><span id="nextMonthText">Des</span> &rsaquo;</button>
+        <span id="streakBadge" class="ml-auto rounded-full bg-[#E6F2ED] px-2.5 py-1 text-[11px] font-semibold text-[#0D6E4E]">Streak 0 Hari</span>
+      </div>
+
+      <!-- Hero Wallet Card + Quick Feature Chips (from 369877.jpg) -->
+      <div class="surface-card rounded-2xl p-4 space-y-3">
+        <div class="flex items-start justify-between">
+          <div>
+            <p class="text-[11px] font-medium text-[#6B6B64]">Total Saldo Dompet & Kekayaan Bersih</p>
+            <p id="statSaldo" class="font-display mt-1 text-2xl sm:text-3xl font-bold text-[#181816] tabular-nums">Rp 0</p>
+            <p id="statNetWorth" class="mt-0.5 text-[11px] text-[#6B6B64] tabular-nums">Kekayaan bersih: Rp 0</p>
+          </div>
+          <button type="button" data-openhub="wallets" class="rounded-lg border border-[#E5E3DC] bg-[#FAF9F6] px-2.5 py-1 text-[11px] font-semibold text-[#181816] hover:bg-[#EFECE4]">Kelola Dompet</button>
+        </div>
+
+        <div class="flex gap-1.5 overflow-x-auto no-scrollbar pt-1">
+          <button type="button" id="chipLaporan" class="rounded-full border border-[#E5E3DC] bg-[#FAF9F6] px-3 py-1 text-[11px] font-semibold text-[#181816] whitespace-nowrap hover:border-[#0D6E4E]">Detail Laporan</button>
+          <button type="button" data-openplan="budget" class="rounded-full border border-[#E5E3DC] bg-[#FAF9F6] px-3 py-1 text-[11px] font-semibold text-[#181816] whitespace-nowrap hover:border-[#0D6E4E]">Budget</button>
+          <button type="button" data-openhub="family" class="rounded-full border border-[#E5E3DC] bg-[#FAF9F6] px-3 py-1 text-[11px] font-semibold text-[#181816] whitespace-nowrap hover:border-[#0D6E4E]">Split Bill</button>
+          <button type="button" data-openplan="salary" class="rounded-full border border-[#E5E3DC] bg-[#FAF9F6] px-3 py-1 text-[11px] font-semibold text-[#181816] whitespace-nowrap hover:border-[#0D6E4E]">Alokasi Gaji</button>
+        </div>
+      </div>
+
+      <!-- Saldo vs Pengeluaran Ring Card (from 369877.jpg) -->
+      <div class="surface-card rounded-2xl p-4 space-y-3">
+        <div class="flex items-center justify-between">
+          <p class="text-xs font-bold text-[#181816]">Saldo vs Pengeluaran</p>
+          <span class="text-[11px] font-medium text-[#6B6B64]" id="ringPeriodLabel">Bulan Ini</span>
+        </div>
+        <div class="flex items-center gap-4">
+          <div class="relative h-24 w-24 shrink-0">
+            <canvas id="homeDonutChart"></canvas>
+            <div class="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
+              <span id="homeRingPct" class="text-sm font-bold text-[#0D6E4E] tabular-nums">0%</span>
+              <span class="text-[9px] font-medium text-[#6B6B64]">Tersimpan</span>
+            </div>
+          </div>
+          <div class="flex-1 space-y-2 text-xs">
+            <div class="flex items-center justify-between">
+              <span class="flex items-center gap-1.5 text-[#57564F]"><span class="h-2 w-2 rounded-sm bg-[#0D6E4E]"></span> Pemasukan</span>
+              <span id="statPemasukan" class="font-bold text-[#0D6E4E] tabular-nums">Rp 0</span>
+            </div>
+            <div class="flex items-center justify-between">
+              <span class="flex items-center gap-1.5 text-[#57564F]"><span class="h-2 w-2 rounded-sm bg-[#E11D48]"></span> Pengeluaran</span>
+              <span id="statPengeluaran" class="font-bold text-[#181816] tabular-nums">Rp 0</span>
+            </div>
+          </div>
+        </div>
+        <div id="homeRingAlert" class="rounded-xl bg-[#FAF9F6] border border-[#E5E3DC] px-3 py-2 text-[11px] font-medium text-[#57564F]">
+          Rasio pengeluaran masih terjaga dengan baik bulan ini.
+        </div>
+      </div>
+
+      <!-- Budget Harian Card (from 369877.jpg) -->
+      <div class="surface-card rounded-2xl p-4 space-y-2">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span class="text-xs font-bold text-[#181816]">Budget Harian</span>
+            <button id="btnEditDailyBudget" type="button" class="text-[11px] font-semibold text-[#0D6E4E]">Ubah</button>
+          </div>
+          <span id="dailyBudgetTarget" class="text-xs font-bold text-[#181816] tabular-nums">Rp 150.000</span>
+        </div>
+        <div class="h-2 w-full overflow-hidden rounded-full bg-[#EFECE4]">
+          <div id="dailyBudgetBar" class="h-full rounded-full bg-[#0D6E4E] transition-all duration-300" style="width: 0%"></div>
+        </div>
+        <div class="flex items-center justify-between text-[11px] tabular-nums">
+          <span id="dailyBudgetRemain" class="font-semibold text-[#0D6E4E]">Sisa Rp 150.000 hari ini</span>
+          <span id="dailyBudgetSpent" class="text-[#6B6B64]">Terpakai Rp 0</span>
+        </div>
+      </div>
+
+      <!-- Quick NLP Add + Recent Daily Grouped Ledger -->
+      <div class="surface-card rounded-2xl p-4 space-y-3">
+        <form id="quickNlpForm" class="flex gap-2">
+          <input id="quickNlpInput" type="text" placeholder='Input cepat: "Makan siang 35rb" atau "Gaji 8.5jt"' class="flex-1 rounded-lg border border-[#E5E3DC] bg-[#FAF9F6] px-3 py-2 text-xs text-[#181816] placeholder:text-[#9C9A90] focus:border-[#0D6E4E] focus:bg-white focus:outline-none" />
+          <button type="submit" class="rounded-lg border border-[#E5E3DC] bg-white px-3 py-2 text-xs font-semibold text-[#181816] hover:bg-[#F5F4F0]">+ Tambah</button>
+        </form>
+        <div class="flex items-center justify-between pt-1">
+          <h2 class="text-xs font-bold uppercase tracking-wider text-[#6B6B64]">Transaksi Terbaru</h2>
+          <button id="btnGoHistory" type="button" class="text-xs font-semibold text-[#0D6E4E]">Lihat Semua</button>
+        </div>
+        <div id="recentList" class="space-y-2"></div>
+      </div>
+    </section>
+
+    <!-- ==================== VIEW 2: TRANSAKSI (HARIAN | KALENDER | BULANAN | CATATAN) ==================== -->
+    <section id="view-history" class="hidden view-panel px-4 pt-5 space-y-3.5">
+      <div class="flex items-center justify-between gap-2">
+        <h2 class="font-display text-xl font-bold text-[#181816]">Transaksi</h2>
+        <div class="flex items-center gap-1.5">
+          <button id="btnImportCsvOpen" type="button" class="rounded-lg border border-[#E5E3DC] bg-white px-2.5 py-1.5 text-[11px] font-semibold text-[#181816]">Impor CSV</button>
+          <button id="btnExportCsv" type="button" class="rounded-lg border border-[#E5E3DC] bg-white px-2.5 py-1.5 text-[11px] font-semibold text-[#181816]">Ekspor CSV</button>
+        </div>
+      </div>
+
+      <!-- Sub-Tabs from 369881.jpg & 369880.jpg -->
+      <div class="grid grid-cols-4 border-b border-[#E5E3DC] text-center text-xs font-semibold">
+        <button type="button" data-txview="daily" class="tx-subtab active py-2">Harian</button>
+        <button type="button" data-txview="calendar" class="tx-subtab py-2">Kalender</button>
+        <button type="button" data-txview="monthly" class="tx-subtab py-2">Bulanan</button>
+        <button type="button" data-txview="notes" class="tx-subtab py-2">Catatan</button>
+      </div>
+
+      <!-- Daily Filters + Grouped Ledger -->
+      <div id="txViewDaily" class="space-y-3">
+        <div class="surface-card rounded-xl p-3 space-y-2">
+          <input id="historySearch" type="search" placeholder="Cari kategori, catatan, tag, atau nominal..." class="w-full rounded-lg border border-[#E5E3DC] bg-[#FAF9F6] px-3 py-2 text-xs text-[#181816] focus:border-[#0D6E4E] focus:bg-white focus:outline-none" />
+          <div class="grid grid-cols-3 gap-2">
+            <select id="historyTypeFilter" class="rounded-lg border border-[#E5E3DC] bg-[#FAF9F6] px-2 py-1.5 text-xs font-semibold">
+              <option value="all">Semua Jenis</option>
+              <option value="pengeluaran">Pengeluaran</option>
+              <option value="pemasukan">Pemasukan</option>
+              <option value="transfer">Transfer</option>
+            </select>
+            <select id="historyWalletFilter" class="rounded-lg border border-[#E5E3DC] bg-[#FAF9F6] px-2 py-1.5 text-xs font-semibold"><option value="all">Semua Dompet</option></select>
+            <select id="historyCategoryFilter" class="rounded-lg border border-[#E5E3DC] bg-[#FAF9F6] px-2 py-1.5 text-xs font-semibold"><option value="all">Semua Kategori</option></select>
+          </div>
+        </div>
+        <div class="flex items-center justify-between text-xs text-[#6B6B64]">
+          <span id="historyCountLabel">0 transaksi</span>
+          <button id="btnToggleBulk" type="button" class="font-semibold text-[#0D6E4E]">Pilih Massal</button>
+        </div>
+        <div id="bulkActionBar" class="hidden items-center justify-between rounded-xl bg-[#0D6E4E] px-3.5 py-2 text-xs text-white">
+          <span id="bulkCountLabel">0 dipilih</span>
+          <button id="btnBulkDelete" type="button" class="rounded-lg bg-rose-600 px-3 py-1 font-semibold">Hapus Terpilih</button>
+        </div>
+        <div id="historyList" class="space-y-3"></div>
+      </div>
+
+      <!-- Interactive Peta Kalender (from 369880.jpg) -->
+      <div id="txViewCalendar" class="hidden space-y-3">
+        <div class="surface-card rounded-2xl p-4 space-y-3">
+          <div class="flex items-center justify-between">
+            <p class="text-xs font-bold text-[#181816]" id="calTitle">November 2026</p>
+            <span class="text-[11px] text-[#6B6B64]">Ketuk tanggal untuk rincian</span>
+          </div>
+          <div class="grid grid-cols-7 gap-1.5 text-center text-[10px] font-semibold text-[#6B6B64]">
+            <span>Sen</span><span>Sel</span><span>Rab</span><span>Kam</span><span>Jum</span><span>Sab</span><span>Min</span>
+          </div>
+          <div id="calendarHeatmapGrid" class="grid grid-cols-7 gap-1.5"></div>
+        </div>
+        <div id="calendarDayDetail" class="space-y-2"></div>
+      </div>
+
+      <!-- 12-Month Summary View -->
+      <div id="txViewMonthly" class="hidden surface-card rounded-2xl p-4 space-y-3">
+        <h3 class="text-sm font-bold text-[#181816]">Ringkasan 12 Bulan</h3>
+        <div id="monthGrid" class="grid grid-cols-3 gap-2"></div>
+      </div>
+
+      <!-- Monthly Notes View -->
+      <div id="txViewNotes" class="hidden surface-card rounded-2xl p-4 space-y-2">
+        <h3 class="text-sm font-bold text-[#181816]">Catatan Keuangan Bulan Ini</h3>
+        <textarea id="monthlyNoteInput" rows="5" placeholder="Tulis target atau catatan evaluasi bulan ini..." class="w-full rounded-xl border border-[#E5E3DC] bg-[#FAF9F6] p-3 text-xs text-[#181816] focus:border-[#0D6E4E] focus:bg-white focus:outline-none"></textarea>
+      </div>
+    </section>
+
+    <!-- ==================== VIEW 3: LAPORAN & RENCANA ==================== -->
+    <section id="view-plan" class="hidden view-panel px-4 pt-5 space-y-4">
+      <div>
+        <p class="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#6B6B64]">ANALITIK & PERENCANAAN</p>
+        <h2 class="font-display text-xl font-bold text-[#181816]">Laporan & Rencana</h2>
+      </div>
+      <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-1" id="planSubNav">
+        <button data-ptab="compare" class="period-pill active" type="button">Detail Laporan</button>
+        <button data-ptab="salary" class="period-pill" type="button">Gaji & Alokasi</button>
+        <button data-ptab="budget" class="period-pill" type="button">Anggaran & Sinking</button>
+        <button data-ptab="goals" class="period-pill" type="button">Tujuan Tabungan</button>
+        <button data-ptab="debt" class="period-pill" type="button">Utang & Cicilan</button>
+        <button data-ptab="bills" class="period-pill" type="button">Tagihan & Langganan</button>
+        <button data-ptab="sim" class="period-pill" type="button">Simulasi & KPR</button>
+      </div>
+      <div id="planContent" class="space-y-4"></div>
+    </section>
+
+    <!-- ==================== VIEW 4: MODUL (17 MODUL) ==================== -->
+    <section id="view-hub" class="hidden view-panel px-4 pt-5 space-y-4">
+      <div id="hubMenu" class="space-y-4">
+        <div>
+          <p class="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#6B6B64]">EKOSISTEM LENGKAP</p>
+          <h2 class="font-display text-xl font-bold text-[#181816]">Semua Modul & Pengaturan</h2>
+        </div>
+        <div id="hubGrid" class="grid grid-cols-2 gap-2.5"></div>
+      </div>
+      <div id="hubDetail" class="hidden space-y-4">
+        <button id="btnHubBack" type="button" class="inline-flex items-center gap-1.5 text-xs font-semibold text-[#0D6E4E]">
+          <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" /></svg>
+          Kembali ke Menu Modul
+        </button>
+        <div id="hubDetailBody" class="space-y-4"></div>
+      </div>
+    </section>
+  </div>
+
+  <!-- FLUSH BOTTOM NAVIGATION -->
+  <nav class="fixed inset-x-0 bottom-0 z-30 border-t border-[#E5E3DC] bg-white/95 backdrop-blur-md">
+    <div class="mx-auto grid max-w-2xl grid-cols-4 px-2 py-1.5">
+      <button data-nav="dashboard" class="nav-btn active" type="button">
+        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" /></svg>
+        <span>Beranda</span>
+      </button>
+      <button data-nav="history" class="nav-btn" type="button">
+        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" /></svg>
+        <span>Transaksi</span>
+      </button>
+      <button data-nav="plan" class="nav-btn" type="button">
+        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" /></svg>
+        <span>Laporan</span>
+      </button>
+      <button data-nav="hub" class="nav-btn" type="button">
+        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" /></svg>
+        <span>Modul</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- MODAL: CATAT TRANSAKSI WITH NEED/WANT/SAVING + BUILT-IN CALCULATOR NUMPAD (from 369878.jpg) -->
+  <div id="txModal" class="fixed inset-0 z-50 hidden items-end sm:items-center justify-center bg-black/40 backdrop-blur-sm">
+    <div class="w-full max-w-lg rounded-t-2xl sm:rounded-2xl bg-white p-4 shadow-2xl max-h-[95vh] overflow-y-auto">
+      <div class="mb-3 flex items-center justify-between">
+        <h2 id="txModalTitle" class="font-display text-base font-bold text-[#181816]">Catat Transaksi</h2>
+        <button id="btnCloseTxModal" type="button" class="flex h-8 w-8 items-center justify-center rounded-lg bg-[#F5F4F0] text-[#57564F]">
+          <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+        </button>
+      </div>
+      <form id="txForm" class="space-y-3" novalidate>
+        <input type="hidden" id="txId" />
+        <div class="grid grid-cols-3 gap-1 rounded-xl bg-[#F5F4F0] p-1">
+          <button type="button" data-txtype="pengeluaran" class="tx-type-btn active-expense">Pengeluaran</button>
+          <button type="button" data-txtype="pemasukan" class="tx-type-btn">Pemasukan</button>
+          <button type="button" data-txtype="transfer" class="tx-type-btn">Transfer</button>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2">
+          <input id="txTanggal" type="date" required class="rounded-xl border border-[#E5E3DC] bg-[#FAF9F6] px-2.5 py-2 text-xs font-semibold text-[#181816]" />
+          <select id="txWallet" class="rounded-xl border border-[#E5E3DC] bg-[#FAF9F6] px-2.5 py-2 text-xs font-semibold text-[#181816]"></select>
+        </div>
+        <div id="txToWalletWrap" class="hidden">
+          <select id="txToWallet" class="w-full rounded-xl border border-[#E5E3DC] bg-[#FAF9F6] px-2.5 py-2 text-xs font-semibold text-[#181816]"></select>
+        </div>
+
+        <!-- Amount Display -->
+        <div class="rounded-xl border border-[#E5E3DC] bg-[#FAF9F6] px-3.5 py-2.5 text-center">
+          <p class="text-[10px] font-semibold uppercase tracking-wider text-[#6B6B64]">Jumlah (IDR)</p>
+          <input id="txNominalExpr" type="text" readonly value="0" class="w-full bg-transparent text-center font-display text-2xl font-bold tabular-nums text-[#181816] focus:outline-none" />
+          <p id="txNominalError" class="hidden text-[11px] font-semibold text-rose-600">Nominal harus lebih dari 0.</p>
+        </div>
+
+        <input id="txCatatan" type="text" placeholder="Deskripsi / catatan (opsional)..." class="w-full rounded-xl border border-[#E5E3DC] bg-[#FAF9F6] px-3 py-2 text-xs text-[#181816]" />
+
+        <div>
+          <p class="text-[10px] font-semibold uppercase tracking-wider text-[#6B6B64] mb-1">Kategori</p>
+          <div id="txCategoryGrid" class="flex gap-1.5 overflow-x-auto no-scrollbar pb-1"></div>
+        </div>
+
+        <!-- Need / Want / Saving Selector (from 369878.jpg) -->
+        <div>
+          <p class="text-[10px] font-semibold uppercase tracking-wider text-[#6B6B64] mb-1">Tipe Pengeluaran</p>
+          <div class="grid grid-cols-3 gap-1.5">
+            <button type="button" data-nws="Need" class="nws-btn active rounded-lg border py-1.5 text-xs font-semibold">Need</button>
+            <button type="button" data-nws="Want" class="nws-btn rounded-lg border py-1.5 text-xs font-semibold">Want</button>
+            <button type="button" data-nws="Saving" class="nws-btn rounded-lg border py-1.5 text-xs font-semibold">Saving</button>
+          </div>
+        </div>
+
+        <!-- Built-in Mobile Calculator Numpad (from 369878.jpg) -->
+        <div class="grid grid-cols-4 gap-1.5 pt-1">
+          <button type="button" data-key="7" class="numpad-key">7</button>
+          <button type="button" data-key="8" class="numpad-key">8</button>
+          <button type="button" data-key="9" class="numpad-key">9</button>
+          <button type="button" data-key="DEL" class="numpad-key text-rose-600">Hapus</button>
+
+          <button type="button" data-key="4" class="numpad-key">4</button>
+          <button type="button" data-key="5" class="numpad-key">5</button>
+          <button type="button" data-key="6" class="numpad-key">6</button>
+          <button type="button" data-key="+" class="numpad-key text-[#0D6E4E]">+</button>
+
+          <button type="button" data-key="1" class="numpad-key">1</button>
+          <button type="button" data-key="2" class="numpad-key">2</button>
+          <button type="button" data-key="3" class="numpad-key">3</button>
+          <button type="button" data-key="-" class="numpad-key text-[#0D6E4E]">-</button>
+
+          <button type="button" data-key="0" class="numpad-key">0</button>
+          <button type="button" data-key="000" class="numpad-key">000</button>
+          <button type="button" data-key="=" class="numpad-key font-bold text-[#0D6E4E]">=</button>
+          <button type="submit" class="rounded-xl bg-[#0D6E4E] py-2.5 text-sm font-bold text-white hover:bg-[#0A593E]">Simpan</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: IMPOR CSV -->
+  <div id="csvModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/45 p-4 backdrop-blur-sm">
+    <div class="w-full max-w-md rounded-2xl bg-white p-5 shadow-2xl space-y-3">
+      <h3 class="font-display text-base font-bold text-[#181816]">Impor Mutasi CSV</h3>
+      <p class="text-xs text-[#6B6B64]">Format kolom: <code>Tanggal (YYYY-MM-DD), Jenis, Kategori, Nominal, Catatan</code></p>
+      <input id="csvFileInput" type="file" accept=".csv,text/csv" class="w-full rounded-xl border border-[#E5E3DC] p-2 text-xs" />
+      <div class="flex justify-end"><button id="btnCloseCsvModal" type="button" class="rounded-lg border border-[#E5E3DC] px-3 py-1.5 text-xs font-semibold">Tutup</button></div>
+    </div>
+  </div>
+
+  <!-- MODAL: PIN LOCK SCREEN -->
+  <div id="pinLockModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-[#181816]/90 p-4 backdrop-blur-md">
+    <div class="w-full max-w-xs rounded-2xl bg-white p-6 text-center shadow-2xl space-y-4">
+      <h3 class="font-display text-base font-bold text-[#181816]">Aplikasi Terkunci</h3>
+      <input id="pinUnlockInput" type="password" inputmode="numeric" maxlength="6" placeholder="••••" class="w-full rounded-xl border border-[#E5E3DC] bg-[#FAF9F6] py-3 text-center text-xl font-bold tracking-widest" />
+      <button id="btnUnlockApp" type="button" class="w-full rounded-xl bg-[#0D6E4E] py-2.5 text-xs font-semibold text-white">Buka Kunci</button>
+    </div>
+  </div>
+
+  <!-- MODAL: KONFIRMASI HAPUS -->
+  <div id="deleteModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/45 p-4 backdrop-blur-sm">
+    <div class="w-full max-w-sm rounded-2xl bg-white p-5 shadow-2xl space-y-4">
+      <h3 class="font-display text-base font-bold text-[#181816]">Hapus Transaksi Ini?</h3>
+      <p class="text-xs text-[#6B6B64]">Data akan dihapus dari aplikasi dan Google Sheets (jika terhubung).</p>
+      <div class="flex gap-2">
+        <button id="btnCancelDelete" type="button" class="flex-1 rounded-xl border border-[#E5E3DC] py-2 text-xs font-semibold">Batal</button>
+        <button id="btnConfirmDelete" type="button" class="flex-1 rounded-xl bg-rose-600 py-2 text-xs font-semibold text-white">Ya, Hapus</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST -->
+  <div id="toast" class="pointer-events-none fixed left-1/2 top-16 z-50 -translate-x-1/2 translate-y-[-16px] opacity-0 transition-all duration-200">
+    <div id="toastInner" class="flex items-center gap-2 rounded-xl bg-[#181816] px-4 py-2.5 text-xs font-semibold text-white shadow-xl">
+      <span id="toastMsg">Berhasil</span>
+    </div>
+  </div>
+
+  <script src="./app.js"></script>
+</body>
+</html>
